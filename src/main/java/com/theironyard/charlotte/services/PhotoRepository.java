@@ -10,12 +10,13 @@ import java.util.List;
 public interface PhotoRepository extends CrudRepository<Photo, Integer> {
 
     List<Photo> findByRecipient(User recipient);
+    List<Photo> findBySender(User sender);
 
-    @Query("SELECT p FROM Photo p WHERE p.recipient = ?1 AND p.id = ?2")
-    Photo findByRecipientPhoto(String recipient, Integer id); //can have customized queries.
-
-    @Query("SELECT max(p.id) FROM Photo p WHERE p.recipient = ?1")
-    Integer findByMaxId(String recipient); //can have customized queries.
+//    @Query("SELECT p FROM Photo p WHERE p.id = ?1")
+//    Photo findByRecipientPhoto(int id);
+//
+//    @Query("SELECT max(p.id) FROM Photo p WHERE p.recipient = ?1")
+//    int findMaxIdByRecipient(String recipient);
 
 
 }

@@ -22,8 +22,10 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
+import java.util.TimerTask;
 
 @RestController
 public class IronSnapController {
@@ -41,8 +43,7 @@ public class IronSnapController {
         if (user == null) {
             user = new User(username, PasswordStorage.createHash(password));
             users.save(user);
-        }
-        else if (!PasswordStorage.verifyPassword(password, user.getPassword())) {
+        } else if (!PasswordStorage.verifyPassword(password, user.getPassword())) {
             throw new Exception("Wrong password");
         }
         session.setAttribute("username", username);
@@ -68,7 +69,8 @@ public class IronSnapController {
             HttpSession session,
             HttpServletResponse response,
             String receiver,
-            int secondsDelete ,
+            int secondsDelete,
+            boolean publicPhoto,
             MultipartFile photo
     ) throws Exception {
         String username = (String) session.getAttribute("username");
@@ -88,8 +90,8 @@ public class IronSnapController {
         }
 
         File photoFile = File.createTempFile("photo",
-            photo.getOriginalFilename(),
-            new File("public"));
+                photo.getOriginalFilename(),
+                new File("public"));
 
         FileOutputStream fos = new FileOutputStream(photoFile);
         fos.write(photo.getBytes());
@@ -99,13 +101,13 @@ public class IronSnapController {
         p.setRecipient(receiverUser);
         p.setFilename(photoFile.getName());
         p.setSecondsDelete(secondsDelete);
+        p.setPublicPhoto(publicPhoto);
         photos.save(p);
 
         response.sendRedirect("/");
 
         return p;
     }
-
 
     @RequestMapping("/photos")
     public List<Photo> showPhotos(HttpSession session) throws Exception {
@@ -117,31 +119,50 @@ public class IronSnapController {
         User user = users.findFirstByName(username);
 
 
-            //photos.delete(photos.findByRecipientPhoto(username, i));
+        for (int i = 0; i < photos.findByRecipient(user).size(); i++) {
+            Photo p = photos.findByRecipient(user).get(i);
+            int secondsTilDelete = photos.findOne(p.getId()).getSecondsDelete();
+            String fileName = photos.findOne(p.getId()).getFilename();
+            File f = new File("/Users/jenniferchang/Code/IronSnap/public/" + fileName);
 
-//        Timer timer = new Timer();
-//        for (int i = 0; i < photos.findByRecipient(user).size(); i++) {
-//            timer.schedule(new Timer(photos.findByRecipientPhoto(username, i)), 5000);
-//        }
+            Timer timer = new Timer();
 
+            TimerTask task = new TimerTask() {
+                @Override
+                public void run() {
+                    photos.delete(p.getId());
+                    f.delete();
+                }
+            };
 
-        for (int i = 0; i < photos.findByMaxId(username); i++) {
-            int thisI = i;
-            new java.util.Timer().schedule(
-                new java.util.TimerTask() {
-                    @Override
-                    public void run() {
-                        //photos.delete(photos.findByRecipient(user));
-                        photos.delete(photos.findByRecipientPhoto(username, thisI).getId());
-                    }
-                },
-                    (photos.findByRecipientPhoto(username, thisI).getSecondsDelete())*1000);
+            long delay = secondsTilDelete * 1000;
+
+            timer.schedule(task, delay);
+
         }
-
-
         return photos.findByRecipient(user);
     }
 
+    @RequestMapping(path = "/public-photos", method = RequestMethod.GET)
+    public List<Photo> showPublicPhotos(HttpSession session) throws Exception {
+        String username = (String) session.getAttribute("username");
+        if (username == null) {
+            throw new Exception("Not logged in.");
+        }
+
+        ArrayList<Photo> photosByPerson = new ArrayList<>();
+
+        User user = users.findFirstByName(username);
+        for (int i = 0; i < photos.findBySender(user).size(); i++) {
+            Photo p = photos.findByRecipient(user).get(i);
+            boolean publicPhot = photos.findOne(p.getId()).isPublicPhoto();
+            if (true == publicPhot) {
+                photosByPerson.add(p);
+
+            }
+        }
+        return photosByPerson;
+    }
 
 
     @PostConstruct

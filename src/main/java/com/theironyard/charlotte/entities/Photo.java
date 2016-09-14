@@ -21,14 +21,18 @@ public class Photo {
     @Column(nullable = false)
     int secondsDelete;
 
+    @Column(nullable = false)
+    boolean isPublicPhoto;
+
     public Photo() {
     }
 
-    public Photo(User sender, User recipient, String filename, int secondsDelete) {
+    public Photo(User sender, User recipient, String filename, int secondsDelete, boolean isPublicPhoto) {
         this.sender = sender;
         this.recipient = recipient;
         this.filename = filename;
         this.secondsDelete = secondsDelete*1000;
+        this.isPublicPhoto = isPublicPhoto;
     }
 
     public int getId() {
@@ -69,5 +73,13 @@ public class Photo {
 
     public void setSecondsDelete(int secondsDelete) {
         this.secondsDelete = secondsDelete;
+    }
+
+    public boolean isPublicPhoto() {
+        return isPublicPhoto;
+    }
+
+    public void setPublicPhoto(boolean publicPhoto) {
+        isPublicPhoto = publicPhoto;
     }
 }

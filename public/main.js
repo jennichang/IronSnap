@@ -3,6 +3,7 @@ function getUser(userData) {
         $("#login").show();
     }
     else {
+        $('#check-box-publicPhoto').attr('checked' ) == true
         $("#upload").show();
         $("#logout").show();
     }

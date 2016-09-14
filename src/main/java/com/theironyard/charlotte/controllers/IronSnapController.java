@@ -63,7 +63,6 @@ public class IronSnapController {
         return users.findFirstByName(username);
     }
 
-
     @RequestMapping("/upload")
     public Photo upload(
             HttpSession session,
@@ -119,23 +118,23 @@ public class IronSnapController {
         User user = users.findFirstByName(username);
 
 
-        for (int i = 0; i < photos.findByRecipient(user).size(); i++) {
-            Photo p = photos.findByRecipient(user).get(i);
-            int secondsTilDelete = photos.findOne(p.getId()).getSecondsDelete();
-            String fileName = photos.findOne(p.getId()).getFilename();
-            File f = new File("/Users/jenniferchang/Code/IronSnap/public/" + fileName);
+        for (int i = 0; i < photos.findByRecipient(user).size(); i++) { // for every photo
+            Photo p = photos.findByRecipient(user).get(i); // make a photo object
+            int secondsTilDelete = photos.findOne(p.getId()).getSecondsDelete(); // get the seconds
+            String fileName = photos.findOne(p.getId()).getFilename(); // get the file name
+            File f = new File("/Users/jenniferchang/Code/IronSnap/public/" + fileName); // create new file on that name
 
             Timer timer = new Timer();
 
             TimerTask task = new TimerTask() {
                 @Override
                 public void run() {
-                    photos.delete(p.getId());
-                    f.delete();
+                    photos.delete(p.getId()); // delete the given photo from database
+                    f.delete(); // and disk
                 }
             };
 
-            long delay = secondsTilDelete * 1000;
+            long delay = secondsTilDelete * 1000; // based on seconds
 
             timer.schedule(task, delay);
 
@@ -155,8 +154,8 @@ public class IronSnapController {
         User user = users.findFirstByName(username);
         for (int i = 0; i < photos.findBySender(user).size(); i++) {
             Photo p = photos.findByRecipient(user).get(i);
-            boolean publicPhot = photos.findOne(p.getId()).isPublicPhoto();
-            if (true == publicPhot) {
+            boolean publicPhoto = photos.findOne(p.getId()).isPublicPhoto();
+            if (true == publicPhoto) {
                 photosByPerson.add(p);
 
             }
